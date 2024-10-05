@@ -2,6 +2,7 @@
 	"name": "tes",
 	"version": "0.1.0",
 	"private": true,
+	"homepage": "https://Anshultilondiya.github.io/test",
 	"dependencies": {
 		"@emotion/react": "^11.13.3",
 		"@emotion/styled": "^11.13.0",
@@ -32,7 +33,9 @@
 		"eject": "react-scripts eject",
 		"lint:fix": "eslint src --ext .ts --fix",
 		"prettier": "prettier --write .",
-		"eslint": "eslint src/** --fix"
+		"eslint": "eslint src/** --fix",
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d build"
 	},
 	"eslintConfig": {
 		"extends": [
@@ -68,6 +71,7 @@
 		"eslint-plugin-react": "^7.33.2",
 		"eslint-plugin-react-hooks": "^4.6.2",
 		"eslint-plugin-react-refresh": "^0.4.5",
+		"gh-pages": "^6.1.1",
 		"prettier": "^3.2.5",
 		"sass": "^1.69.6"
 	}

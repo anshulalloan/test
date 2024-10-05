@@ -1,5 +1,6 @@
-import { Input, Option, Select } from "@mui/joy";
+import { Button, Input, Option, Select } from "@mui/joy";
 import { Box } from "@mui/material";
+import { nanoid } from "nanoid";
 import { useCallback, useMemo, useState } from "react";
 
 import { DoughnutChart } from "./DoughnutChart";
@@ -13,6 +14,13 @@ const sipFrequency = [
 	{ value: "yearly", label: "Yearly" },
 ];
 
+const formatNumber = (num: number) => {
+	return num.toLocaleString("en-IN", {
+		maximumFractionDigits: 2,
+		minimumFractionDigits: 2,
+	});
+};
+
 export const SipCalculator = () => {
 	const [inputForm, setInputForm] = useState({
 		frequency: "monthly",
@@ -24,14 +32,75 @@ export const SipCalculator = () => {
 		hardStopOnPrincipal: "0",
 	});
 
-	const handleInputChange = useCallback(
-		(key: string, value: number | string) => {
-			setInputForm((prev) => {
-				return {
-					...prev,
-					[key]: value,
-				};
+	const [withdrawalForm, setWithdrawalForm] = useState({
+		transactionNumber: 0,
+		withdrawalAmount: 0,
+	});
+
+	const [
+		withdrawalTransactions,
+		setWithdrawalTransactions,
+	] = useState<
+		Array<{
+			id: string;
+			transactionNumber: number;
+			withdrawalAmount: number;
+		}>
+	>([]);
+
+	const handleWithDrawalChange = useCallback(() => {
+		setWithdrawalTransactions((prev) => {
+			return [
+				...prev,
+				{
+					id: nanoid(),
+					transactionNumber:
+						withdrawalForm.transactionNumber,
+					withdrawalAmount: withdrawalForm.withdrawalAmount,
+				},
+			];
+		});
+		setWithdrawalForm({
+			transactionNumber: 0,
+			withdrawalAmount: 0,
+		});
+	}, [
+		withdrawalForm.transactionNumber,
+		withdrawalForm.withdrawalAmount,
+	]);
+
+	const handleRemoveWithdrawal = useCallback(
+		(id: string) => {
+			setWithdrawalTransactions((prev) => {
+				return prev.filter(
+					(transaction) => transaction.id !== id
+				);
 			});
+		},
+		[]
+	);
+
+	const handleInputChange = useCallback(
+		(
+			key: string,
+			value: number | string,
+			isWithdrawal?: boolean
+		) => {
+			if (isWithdrawal) {
+				setWithdrawalForm((prev) => {
+					return {
+						...prev,
+						[key]: value,
+					};
+				});
+			} else {
+				setInputForm((prev) => {
+					return {
+						...prev,
+						[key]: value,
+					};
+				});
+			}
 		},
 		[]
 	);
@@ -77,6 +146,7 @@ export const SipCalculator = () => {
 				investment: P,
 				futureValue,
 				totalInvestment,
+				withdrawalAmount: 0,
 			};
 			const base = Math.floor(
 				periodsPerYear[frequency] /
@@ -88,11 +158,30 @@ export const SipCalculator = () => {
 			if (hardStop > 0 && P > hardStop) {
 				P = hardStop;
 			}
+
+			const isWithdrawal = withdrawalTransactions.find(
+				(transaction) => {
+					console.log(transaction.transactionNumber, i);
+					return (
+						Number(transaction.transactionNumber) === i
+					);
+				}
+			);
+
 			newTransaction.investment = P.toFixed(2);
 			totalInvestment += P;
+
 			newTransaction.totalInvestment =
 				totalInvestment.toFixed(2);
+
+			if (isWithdrawal) {
+				futureValue -= isWithdrawal.withdrawalAmount;
+				newTransaction.withdrawalAmount =
+					isWithdrawal.withdrawalAmount;
+			}
+
 			futureValue = (futureValue + P) * (1 + r);
+
 			newTransaction.futureValue = futureValue.toFixed(2);
 			transactions.push(newTransaction);
 		}
@@ -103,7 +192,7 @@ export const SipCalculator = () => {
 			returns: (futureValue - totalInvestment).toFixed(2),
 			transactions,
 		};
-	}, [inputForm]);
+	}, [inputForm, withdrawalTransactions]);
 
 	return (
 		<Box className={"sip-calculator"}>
@@ -223,6 +312,69 @@ export const SipCalculator = () => {
 					/>
 				</Box>
 			</Box>
+			<Box className={"withdrawal-container"}>
+				<Box className={"input-box"}>
+					<label>Transaction Number</label>
+					<Input
+						placeholder={"Enter HardStop"}
+						value={withdrawalForm.transactionNumber}
+						onChange={(e) => {
+							handleInputChange(
+								"transactionNumber",
+								e.target.value,
+								true
+							);
+						}}
+					/>
+				</Box>
+				<Box className={"input-box"}>
+					<label>Withdrawal Amount</label>
+					<Input
+						placeholder={"Enter HardStop"}
+						value={withdrawalForm.withdrawalAmount}
+						onChange={(e) => {
+							handleInputChange(
+								"withdrawalAmount",
+								e.target.value,
+								true
+							);
+						}}
+					/>
+				</Box>
+				<Button onClick={handleWithDrawalChange}>
+					Add Withdrawal
+				</Button>
+				<table className={"withdrawal-transactions-table"}>
+					<thead>
+						<tr>
+							<th>Transaction Number</th>
+							<th>Withdrawal Amount</th>
+						</tr>
+					</thead>
+					<tbody>
+						{withdrawalTransactions.map((transaction) => (
+							<tr key={transaction.id}>
+								<td>{transaction.transactionNumber}</td>
+								<td>
+									{formatNumber(
+										transaction.withdrawalAmount
+									)}
+								</td>
+								<td>
+									<Button
+										onClick={handleRemoveWithdrawal.bind(
+											null,
+											transaction.id
+										)}
+									>
+										Remove
+									</Button>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</Box>
 			<DoughnutChart
 				labels={["returns", "totalInvestment"]}
 				dataset={[
@@ -233,15 +385,26 @@ export const SipCalculator = () => {
 			<Box className={"output-container"}>
 				<Box className={"output"}>
 					<span>Total Investment</span>
-					<span> {calculateSip.totalInvestment}</span>
+					<span>
+						{" "}
+						{formatNumber(
+							Number(calculateSip.totalInvestment)
+						)}
+					</span>
 				</Box>
 				<Box className={"output"}>
 					<span>Return on Investment</span>
-					<span> {calculateSip.returns}</span>
+					<span>
+						{" "}
+						{formatNumber(Number(calculateSip.returns))}
+					</span>
 				</Box>
 				<Box className={"output"}>
 					<span>Total Value</span>
-					<span> {calculateSip.futureValue}</span>
+					<span>
+						{" "}
+						{formatNumber(Number(calculateSip.futureValue))}
+					</span>
 				</Box>
 
 				<table className={"transactions-table"}>
@@ -249,8 +412,9 @@ export const SipCalculator = () => {
 						<tr>
 							<th>Period</th>
 							<th>Investment</th>
-							<th>Future Value</th>
 							<th>Total Investment</th>
+							<th>Future Value</th>
+							<th>Withdrawal Amount</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -262,9 +426,27 @@ export const SipCalculator = () => {
 										key={index}
 									>
 										<td>{transaction.period}</td>
-										<td>{transaction.investment}</td>
-										<td>{transaction.futureValue}</td>
-										<td>{transaction.totalInvestment}</td>
+										<td>
+											{formatNumber(
+												Number(transaction.investment)
+											)}
+										</td>
+
+										<td>
+											{formatNumber(
+												Number(transaction.totalInvestment)
+											)}
+										</td>
+										<td>
+											{formatNumber(
+												Number(transaction.futureValue)
+											)}
+										</td>
+										<td>
+											{formatNumber(
+												Number(transaction.withdrawalAmount)
+											)}
+										</td>
 									</tr>
 								);
 							}

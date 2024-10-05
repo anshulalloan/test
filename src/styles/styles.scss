@@ -1,0 +1,31 @@
+table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	margin-bottom: 1rem;
+	background-color: #fff;
+	border: 1px solid #dee2e6;
+	border-radius: 0.25rem;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+	thead {
+		background-color: #f8f9fa;
+		color: #495057;
+		th {
+			padding: 0.75rem;
+			vertical-align: top;
+			border-top: 1px solid #dee2e6;
+			border-bottom: 1px solid #dee2e6;
+		}
+	}
+	tbody {
+		tr {
+			td {
+				padding: 0.75rem;
+				vertical-align: top;
+				border-top: 1px solid #dee2e6;
+				border-bottom: 1px solid #dee2e6;
+			}
+		}
+	}
+}

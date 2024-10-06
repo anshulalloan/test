@@ -38,5 +38,8 @@
 				color: #329d9c;
 			}
 		}
+		@media screen and (max-width: 998px) {
+			display: none;
+		}
 	}
 }

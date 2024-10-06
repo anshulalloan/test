@@ -1,6 +1,10 @@
 .sip-calculator {
 	width: 100%;
 	padding: 50px 10%;
+	@media screen and (max-width: 768px) {
+		padding: 50px 5%;
+		
+	}
 	.container {
 		@include flexRow(stretch, space-between, 50px);
 		border: 1px solid var(--gray150);
@@ -13,6 +17,13 @@
 		.results-container {
 			width: calc(50% - 25px);
 			@include flexCol(center, flex-start, 50px);
+		}
+		@media screen and (max-width: 768px) {
+			@include flexCol(center, flex-start, 50px);
+			.input-container,
+			.results-container {
+				width: 100%;
+			}
 		}
 	}
 	.input-box {

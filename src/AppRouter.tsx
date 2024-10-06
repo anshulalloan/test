@@ -7,7 +7,7 @@ export const AppRouter = () => {
 		<Routes>
 			<Route
 				path="/"
-				element={<h1>Home</h1>}
+				element={<SipCalculator />}
 			/>
 			<Route
 				path="/sip-calculator"

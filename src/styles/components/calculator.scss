@@ -1,0 +1,145 @@
+.sip-calculator {
+	width: 100%;
+	padding: 50px 10%;
+	.container {
+		@include flexRow(stretch, space-between, 50px);
+		border: 1px solid var(--gray150);
+		border-radius: 8px;
+		padding: 30px 24px;
+		.input-container {
+			width: calc(50% - 25px);
+			@include flexCol(flex-start, flex-start, 30px);
+		}
+		.results-container {
+			width: calc(50% - 25px);
+			@include flexCol(center, flex-start, 50px);
+		}
+	}
+	.input-box {
+		width: 100%;
+		@include flexCol(flex-start, flex-start, 16px);
+		label {
+			@extend .para;
+			width: 100%;
+		}
+		.MuiSelect-root {
+			width: 100%;
+			background-color: #fff;
+			box-shadow: none !important;
+			border-radius: 8px;
+			border: 1px solid#f0f2f8;
+			padding: 12px 16px;
+			.MuiSelect-button {
+			}
+		}
+		&.range {
+			&.marks {
+				margin-bottom: 30px;
+			}
+			.header {
+				width: 100%;
+				@include flexRow(center, space-between, 16px);
+				.input-field {
+					width: 120px;
+					padding: 4px 8px;
+					@include flexRow(center, space-between, 8px);
+					background-color: #ebf9f5;
+					color: #04ad83;
+					font-weight: 600;
+					text-align: right;
+					&:focus-within::before {
+						border: none !important;
+						outline: none !important;
+						box-shadow: none !important;
+					}
+					.start-decorator {
+						color: #04ad83;
+					}
+					input {
+						@extend .para;
+						background-color: transparent;
+						color: #04ad83;
+						font-weight: 600;
+						border: none;
+						min-width: 10px;
+						flex-grow: 1;
+						text-align: right;
+						&:focus,
+						&:focus-within {
+							outline: none;
+						}
+					}
+				}
+			}
+		}
+	}
+	.output-container {
+		width: 100%;
+		@include flexCol(flex-start, flex-start, 16px);
+		.output-box {
+			width: 100%;
+			@include flexRow(center, space-between, 16px);
+			span {
+				@extend .para;
+				color: var(--gray700);
+			}
+			h3 {
+				@extend .h4-h;
+				color: var(--gray900);
+			}
+		}
+	}
+	.legends {
+		width: 100%;
+		@include flexRow(center, center, 16px);
+		.legend-box {
+			width: 100%;
+			@include flexRow(center, flex-start, 16px);
+			.color-box {
+				width: 30px;
+				height: 10px;
+				border-radius: 10px;
+			}
+			span {
+				@extend .p-sm;
+				color: var(--gray700);
+			}
+		}
+	}
+}
+
+.tile {
+	padding: 24px !important;
+	border-radius: 8px;
+	box-shadow:
+		rgba(14, 63, 126, 0.06) 0px 0px 0px 1px,
+		rgba(42, 51, 70, 0.03) 0px 1px 1px -0.5px,
+		rgba(42, 51, 70, 0.04) 0px 2px 2px -1px,
+		rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px,
+		rgba(42, 51, 70, 0.03) 0px 5px 5px -2.5px,
+		rgba(42, 51, 70, 0.03) 0px 10px 10px -5px,
+		rgba(42, 51, 70, 0.03) 0px 24px 24px -8px;
+}
+
+.MuiSlider-root {
+	color: #04ad83;
+	.MuiSlider-rail {
+		background-color: #f0f2f8;
+	}
+	.MuiSlider-track {
+		background-color: #04ad83;
+	}
+	.MuiSlider-thumb {
+		width: 20px;
+		height: 20px;
+		background-color: #04ad83;
+		border: 2px solid #ebf9f5;
+		box-shadow: 0 0 10px #ebf9f5;
+		&:hover {
+			box-shadow: 0 0 10px #ebf9f5;
+		}
+		&::before {
+			display: none;
+		}
+	}
+}

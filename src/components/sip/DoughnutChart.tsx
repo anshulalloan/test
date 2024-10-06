@@ -39,20 +39,13 @@ export const DoughnutChart: FC<TDoughnutChartProps> = ({
 						{
 							label: "₹",
 							data: dataset,
-							backgroundColor: [
-								"rgba(255, 99, 132, 0.2)",
-								"rgba(54, 162, 235, 0.2)",
-							],
-							borderColor: [
-								"rgba(255, 99, 132, 1)",
-								"rgba(54, 162, 235, 1)",
-							],
+							backgroundColor: ["#5367ff", "#eef0ff"],
+							borderColor: ["#5367ff", "#eef0ff"],
 							borderWidth: 1,
 						},
 					],
 				}}
 				height={400}
-				width={600}
 				options={{
 					maintainAspectRatio: false,
 					plugins: {
@@ -61,6 +54,7 @@ export const DoughnutChart: FC<TDoughnutChartProps> = ({
 							position: "right",
 						},
 					},
+					cutout: "70%",
 				}}
 			/>
 		</Box>

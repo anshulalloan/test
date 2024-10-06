@@ -1,12 +1,15 @@
-import React from "react";
+import { Box } from "@mui/material";
 
+import { AppRouter } from "./AppRouter";
+import { Navbar } from "./components/Navbar";
 import { SipCalculator } from "./components/sip/Calculator";
 
 function App() {
 	return (
-		<div className="App">
-			<SipCalculator />
-		</div>
+		<Box className="App">
+			<Navbar />
+			<AppRouter />
+		</Box>
 	);
 }
 

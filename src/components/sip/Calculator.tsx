@@ -1,23 +1,57 @@
-import { Button, Input, Option, Select } from "@mui/joy";
+import {
+	Button,
+	Grid,
+	Input,
+	Option,
+	Select,
+	Sheet,
+	Slider,
+	Switch,
+} from "@mui/joy";
 import { Box } from "@mui/material";
 import { nanoid } from "nanoid";
 import { useCallback, useMemo, useState } from "react";
+import { IoChevronDownOutline } from "react-icons/io5";
 
 import { DoughnutChart } from "./DoughnutChart";
 
 const sipFrequency = [
-	{ value: "daily", label: "Daily" },
-	{ value: "weekly", label: "Weekly" },
 	{ value: "monthly", label: "Monthly" },
 	{ value: "quarterly", label: "Quarterly" },
 	{ value: "half-yearly", label: "Half-Yearly" },
 	{ value: "yearly", label: "Yearly" },
 ];
 
+const periodsPerYear: Record<string, number> = {
+	monthly: 12,
+	quarterly: 4,
+	"half-yearly": 2,
+	yearly: 1,
+};
+
+const installmentAmountMarks = [
+	{
+		value: 10000,
+		label: "₹10k",
+	},
+	{
+		value: 25000,
+		label: "₹25k",
+	},
+	{
+		value: 50000,
+		label: "₹50k",
+	},
+	{
+		value: 75000,
+		label: "₹75k",
+	},
+];
+
 const formatNumber = (num: number) => {
 	return num.toLocaleString("en-IN", {
-		maximumFractionDigits: 2,
-		minimumFractionDigits: 2,
+		maximumFractionDigits: 0,
+		minimumFractionDigits: 0,
 	});
 };
 
@@ -47,6 +81,9 @@ export const SipCalculator = () => {
 			withdrawalAmount: number;
 		}>
 	>([]);
+
+	const [allowIncrement, setAllowIncrement] =
+		useState<boolean>(false);
 
 	const handleWithDrawalChange = useCallback(() => {
 		setWithdrawalTransactions((prev) => {
@@ -118,15 +155,6 @@ export const SipCalculator = () => {
 
 		const transactions = [];
 
-		const periodsPerYear: Record<string, number> = {
-			daily: 365,
-			weekly: 52,
-			monthly: 12,
-			quarterly: 4,
-			"half-yearly": 2,
-			yearly: 1,
-		};
-
 		const n = periodsPerYear[frequency];
 		const r = parseFloat(expectedReturns) / 100 / n;
 		let P = parseFloat(monthlyInvestment);
@@ -161,7 +189,6 @@ export const SipCalculator = () => {
 
 			const isWithdrawal = withdrawalTransactions.find(
 				(transaction) => {
-					console.log(transaction.transactionNumber, i);
 					return (
 						Number(transaction.transactionNumber) === i
 					);
@@ -196,122 +223,352 @@ export const SipCalculator = () => {
 
 	return (
 		<Box className={"sip-calculator"}>
-			<Box className={"input-container"}>
-				<Box className={"input-box"}>
-					<label>Frequency</label>
-					<Select
-						placeholder={"Frequency"}
-						onChange={(_, value) => {
-							handleInputChange(
-								"frequency",
-								value as string
-							);
-						}}
-						value={inputForm.frequency}
-					>
-						{sipFrequency.map((item, index) => {
-							return (
-								<Option
-									value={item.value}
-									key={index}
+			<Box className={"container"}>
+				<Box className={"input-container"}>
+					<Box className={"input-box"}>
+						<label>Frequency of Investment</label>
+						<Select
+							placeholder={"Frequency"}
+							onChange={(_, value) => {
+								handleInputChange(
+									"frequency",
+									value as string
+								);
+							}}
+							value={inputForm.frequency}
+							indicator={<IoChevronDownOutline />}
+							className="select"
+						>
+							{sipFrequency.map((item, index) => {
+								return (
+									<Option
+										value={item.value}
+										key={index}
+									>
+										{item.label}
+									</Option>
+								);
+							})}
+						</Select>
+					</Box>
+
+					<Box className={"input-box range marks"}>
+						<Box className={"header"}>
+							<label>Installment Amount</label>
+							<Box className={"input-field-container"}>
+								<span className="error"></span>
+								<Box className={"input-field"}>
+									<span className={"start-decorator"}>
+										₹
+									</span>
+									<input
+										placeholder={"0"}
+										value={inputForm.monthlyInvestment}
+										onChange={(e) => {
+											handleInputChange(
+												"monthlyInvestment",
+												e.target.value
+											);
+										}}
+									/>
+								</Box>
+							</Box>
+						</Box>
+						<Slider
+							min={500}
+							max={100000}
+							value={Number(inputForm.monthlyInvestment)}
+							onChange={(_: any, value: any) => {
+								handleInputChange(
+									"monthlyInvestment",
+									value as number
+								);
+							}}
+							marks={installmentAmountMarks}
+						/>
+					</Box>
+					<Box className={"input-box range"}>
+						<Box className={"header"}>
+							<label>Expected Return Rate (per year)</label>
+							<Box className={"input-field-container"}>
+								<span className="error"></span>
+								<Box className={"input-field"}>
+									<input
+										placeholder={"Enter Expected Returns"}
+										value={inputForm.expectedReturns}
+										onChange={(e) => {
+											handleInputChange(
+												"expectedReturns",
+												e.target.value
+											);
+										}}
+									/>
+									<span className={"start-decorator"}>
+										%
+									</span>
+								</Box>
+							</Box>
+						</Box>
+						<Slider
+							min={1}
+							max={50}
+							value={Number(inputForm.expectedReturns)}
+							onChange={(_: any, value: any) => {
+								handleInputChange(
+									"expectedReturns",
+									value as number
+								);
+							}}
+						/>
+					</Box>
+					<Box className={"input-box range"}>
+						<Box className={"header"}>
+							<label>Time Period (in years)</label>
+							<Box className={"input-field-container"}>
+								<span className="error"></span>
+								<Box className={"input-field"}>
+									<input
+										placeholder={"Enter Investment Period"}
+										value={inputForm.investmentPeriod}
+										onChange={(e) => {
+											handleInputChange(
+												"investmentPeriod",
+												e.target.value
+											);
+										}}
+									/>
+									<span className={"start-decorator"}>
+										Yr
+									</span>
+								</Box>
+							</Box>
+						</Box>
+						<Slider
+							min={1}
+							max={50}
+							value={Number(inputForm.investmentPeriod)}
+							onChange={(_: any, value: any) => {
+								handleInputChange(
+									"investmentPeriod",
+									value as number
+								);
+							}}
+						/>
+					</Box>
+					<Box className={"input-box range"}>
+						<Box className={"header"}>
+							<label>Allow Increment</label>
+							<Switch
+								checked={allowIncrement}
+								onChange={() => {
+									setAllowIncrement((prev) => !prev);
+								}}
+								startDecorator={
+									allowIncrement ? "YES" : "NO"
+								}
+							/>
+						</Box>
+					</Box>
+					{allowIncrement ? (
+						<>
+							<Box className={"input-box"}>
+								<label>Increment Frequency</label>
+								<Select
+									placeholder={"incrementFrequency"}
+									onChange={(_, value) => {
+										handleInputChange(
+											"incrementFrequency",
+											value as string
+										);
+									}}
+									value={inputForm.incrementFrequency}
+									indicator={<IoChevronDownOutline />}
+									className="select"
 								>
-									{item.label}
-								</Option>
-							);
-						})}
-					</Select>
+									{sipFrequency.map((item, index) => {
+										return (
+											<Option
+												value={item.value}
+												key={index}
+												disabled={
+													periodsPerYear[item.value] >
+													periodsPerYear[
+														inputForm.frequency
+													]
+												}
+											>
+												{item.label}
+											</Option>
+										);
+									})}
+								</Select>
+							</Box>
+
+							<Box className={"input-box range"}>
+								<Box className={"header"}>
+									<label>
+										Increment Installment Amount by (in %)
+									</label>
+									<Box className={"input-field-container"}>
+										<span className="error"></span>
+										<Box className={"input-field"}>
+											<input
+												placeholder={
+													"Enter Increment Percentage"
+												}
+												value={inputForm.increment}
+												onChange={(e) => {
+													handleInputChange(
+														"increment",
+														e.target.value
+													);
+												}}
+											/>
+											<span className={"start-decorator"}>
+												%
+											</span>
+										</Box>
+									</Box>
+								</Box>
+								<Slider
+									min={1}
+									max={30}
+									value={Number(inputForm.increment)}
+									onChange={(_: any, value: any) => {
+										handleInputChange(
+											"increment",
+											value as number
+										);
+									}}
+								/>
+							</Box>
+							<Box className={"input-box"}></Box>
+							<Box className={"input-box range"}>
+								<Box className={"header"}>
+									<label>
+										Restrict Installment Amount To
+									</label>
+									<Box className={"input-field-container"}>
+										<span className="error"></span>
+										<Box className={"input-field"}>
+											<span className={"start-decorator"}>
+												₹
+											</span>
+											<input
+												placeholder={"Enter HardStop"}
+												value={
+													inputForm.hardStopOnPrincipal
+												}
+												onChange={(e) => {
+													handleInputChange(
+														"hardStopOnPrincipal",
+														e.target.value
+													);
+												}}
+											/>
+										</Box>
+									</Box>
+								</Box>
+								<Slider
+									min={Number(inputForm.monthlyInvestment)}
+									max={
+										Number(inputForm.monthlyInvestment) * 10
+									}
+									value={Number(
+										inputForm.hardStopOnPrincipal
+									)}
+									onChange={(_: any, value: any) => {
+										handleInputChange(
+											"hardStopOnPrincipal",
+											value as number
+										);
+									}}
+									marks={[2, 4, 6, 8, 10].map((item) => {
+										return {
+											value:
+												Number(
+													inputForm.monthlyInvestment
+												) * item,
+											label: `₹${formatNumber(
+												Number(
+													Math.floor(
+														(Number(
+															inputForm.monthlyInvestment
+														) *
+															item) /
+															1000
+													)
+												)
+											)}k`,
+										};
+									})}
+								/>
+							</Box>
+						</>
+					) : null}
 				</Box>
-				<Box className={"input-box"}>
-					<label>Increment Frequency</label>
-					<Select
-						placeholder={"incrementFrequency"}
-						onChange={(_, value) => {
-							handleInputChange(
-								"incrementFrequency",
-								value as string
-							);
-						}}
-						value={inputForm.incrementFrequency}
-					>
-						{sipFrequency.map((item, index) => {
-							return (
-								<Option
-									value={item.value}
-									key={index}
-								>
-									{item.label}
-								</Option>
-							);
-						})}
-					</Select>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Monthly Investment</label>
-					<Input
-						startDecorator={"₹"}
-						placeholder={"Enter Monthly Investment"}
-						value={inputForm.monthlyInvestment}
-						onChange={(e) => {
-							handleInputChange(
-								"monthlyInvestment",
-								e.target.value
-							);
-						}}
-					/>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Expected Returns</label>
-					<Input
-						placeholder={"Enter Expected Returns"}
-						value={inputForm.expectedReturns}
-						onChange={(e) => {
-							handleInputChange(
-								"expectedReturns",
-								e.target.value
-							);
-						}}
-					/>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Investment Period</label>
-					<Input
-						placeholder={"Enter Investment Period"}
-						value={inputForm.investmentPeriod}
-						onChange={(e) => {
-							handleInputChange(
-								"investmentPeriod",
-								e.target.value
-							);
-						}}
-					/>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Increment Percentage</label>
-					<Input
-						placeholder={"Enter Increment Percentage"}
-						value={inputForm.increment}
-						onChange={(e) => {
-							handleInputChange(
-								"increment",
-								e.target.value
-							);
-						}}
-					/>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Hard Stop on Principal</label>
-					<Input
-						placeholder={"Enter HardStop"}
-						value={inputForm.hardStopOnPrincipal}
-						onChange={(e) => {
-							handleInputChange(
-								"hardStopOnPrincipal",
-								e.target.value
-							);
-						}}
+
+				<Box className={"results-container"}>
+					<Box className={"output-container"}>
+						<Box className={"output-box"}>
+							<span>Total Investment</span>
+							<h3>
+								{"₹"}
+								{formatNumber(
+									Number(calculateSip.totalInvestment)
+								)}
+							</h3>
+						</Box>
+						<Box className={"output-box"}>
+							<span>Est. Returns</span>
+							<h3>
+								{"₹"}
+								{formatNumber(Number(calculateSip.returns))}
+							</h3>
+						</Box>
+						<Box className={"output-box"}>
+							<span>Total Value</span>
+							<h3>
+								{"₹"}
+								{formatNumber(
+									Number(calculateSip.futureValue)
+								)}
+							</h3>
+						</Box>
+					</Box>
+					<Box className={"legends"}>
+						{["Est. Returns", "Total Investment"].map(
+							(label, index) => {
+								return (
+									<Box
+										key={label}
+										className={"legend-box"}
+									>
+										<Box
+											className={"color-box"}
+											style={{
+												backgroundColor:
+													index === 0
+														? "#5367ff"
+														: "#eef0ff",
+											}}
+										></Box>
+										<span>{label}</span>
+									</Box>
+								);
+							}
+						)}
+					</Box>
+					<DoughnutChart
+						labels={["Est. Returns", "Total Investment"]}
+						dataset={[
+							calculateSip.returns,
+							calculateSip.totalInvestment,
+						]}
 					/>
 				</Box>
 			</Box>
+
 			<Box className={"withdrawal-container"}>
 				<Box className={"input-box"}>
 					<label>Transaction Number</label>
@@ -375,38 +632,7 @@ export const SipCalculator = () => {
 					</tbody>
 				</table>
 			</Box>
-			<DoughnutChart
-				labels={["returns", "totalInvestment"]}
-				dataset={[
-					calculateSip.returns,
-					calculateSip.totalInvestment,
-				]}
-			/>
 			<Box className={"output-container"}>
-				<Box className={"output"}>
-					<span>Total Investment</span>
-					<span>
-						{" "}
-						{formatNumber(
-							Number(calculateSip.totalInvestment)
-						)}
-					</span>
-				</Box>
-				<Box className={"output"}>
-					<span>Return on Investment</span>
-					<span>
-						{" "}
-						{formatNumber(Number(calculateSip.returns))}
-					</span>
-				</Box>
-				<Box className={"output"}>
-					<span>Total Value</span>
-					<span>
-						{" "}
-						{formatNumber(Number(calculateSip.futureValue))}
-					</span>
-				</Box>
-
 				<table className={"transactions-table"}>
 					<thead>
 						<tr>

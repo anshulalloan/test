@@ -9,9 +9,12 @@ import {
 	Switch,
 } from "@mui/joy";
 import { Box } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { nanoid } from "nanoid";
 import { useCallback, useMemo, useState } from "react";
+import { IoIosCloseCircleOutline } from "react-icons/io";
 import { IoChevronDownOutline } from "react-icons/io5";
+import { MdDelete } from "react-icons/md";
 
 import { DoughnutChart } from "./DoughnutChart";
 
@@ -66,6 +69,10 @@ export const SipCalculator = () => {
 		hardStopOnPrincipal: "0",
 	});
 
+	const [startDate, setStartDate] = useState<string>(
+		new Date().toISOString().slice(0, 7)
+	);
+
 	const [withdrawalForm, setWithdrawalForm] = useState({
 		transactionNumber: 0,
 		withdrawalAmount: 0,
@@ -91,9 +98,12 @@ export const SipCalculator = () => {
 				...prev,
 				{
 					id: nanoid(),
-					transactionNumber:
-						withdrawalForm.transactionNumber,
-					withdrawalAmount: withdrawalForm.withdrawalAmount,
+					transactionNumber: Number(
+						withdrawalForm.transactionNumber
+					),
+					withdrawalAmount: Number(
+						withdrawalForm.withdrawalAmount
+					),
 				},
 			];
 		});
@@ -170,6 +180,14 @@ export const SipCalculator = () => {
 				string,
 				string | number
 			> = {
+				date: new Date(
+					new Date(startDate).setMonth(
+						new Date(startDate).getMonth() +
+							i * (12 / periodsPerYear[frequency])
+					)
+				)
+					.toISOString()
+					.slice(0, 7),
 				period: i,
 				investment: P,
 				futureValue,
@@ -219,7 +237,7 @@ export const SipCalculator = () => {
 			returns: (futureValue - totalInvestment).toFixed(2),
 			transactions,
 		};
-	}, [inputForm, withdrawalTransactions]);
+	}, [inputForm, startDate, withdrawalTransactions]);
 
 	return (
 		<Box className={"sip-calculator"}>
@@ -355,6 +373,17 @@ export const SipCalculator = () => {
 							}}
 						/>
 					</Box>
+					<Box className={"input-box start-date"}>
+						<label>Start Date</label>
+						<Input
+							className="date-input"
+							type="month"
+							value={startDate}
+							onChange={(e) => {
+								setStartDate(e.target.value);
+							}}
+						/>
+					</Box>
 					<Box className={"input-box range"}>
 						<Box className={"header"}>
 							<label>Allow Increment</label>
@@ -369,6 +398,7 @@ export const SipCalculator = () => {
 							/>
 						</Box>
 					</Box>
+
 					{allowIncrement ? (
 						<>
 							<Box className={"input-box"}>
@@ -570,115 +600,177 @@ export const SipCalculator = () => {
 			</Box>
 
 			<Box className={"withdrawal-container"}>
-				<Box className={"input-box"}>
-					<label>Transaction Number</label>
-					<Input
-						placeholder={"Enter HardStop"}
-						value={withdrawalForm.transactionNumber}
-						onChange={(e) => {
-							handleInputChange(
-								"transactionNumber",
-								e.target.value,
-								true
-							);
-						}}
-					/>
-				</Box>
-				<Box className={"input-box"}>
-					<label>Withdrawal Amount</label>
-					<Input
-						placeholder={"Enter HardStop"}
-						value={withdrawalForm.withdrawalAmount}
-						onChange={(e) => {
-							handleInputChange(
-								"withdrawalAmount",
-								e.target.value,
-								true
-							);
-						}}
-					/>
-				</Box>
-				<Button onClick={handleWithDrawalChange}>
-					Add Withdrawal
-				</Button>
-				<table className={"withdrawal-transactions-table"}>
-					<thead>
-						<tr>
-							<th>Transaction Number</th>
-							<th>Withdrawal Amount</th>
-						</tr>
-					</thead>
-					<tbody>
-						{withdrawalTransactions.map((transaction) => (
-							<tr key={transaction.id}>
-								<td>{transaction.transactionNumber}</td>
-								<td>
-									{formatNumber(
-										transaction.withdrawalAmount
-									)}
-								</td>
-								<td>
-									<Button
-										onClick={handleRemoveWithdrawal.bind(
-											null,
-											transaction.id
-										)}
-									>
-										Remove
-									</Button>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</Box>
-			<Box className={"output-container"}>
-				<table className={"transactions-table"}>
-					<thead>
-						<tr>
-							<th>Period</th>
-							<th>Investment</th>
-							<th>Total Investment</th>
-							<th>Future Value</th>
-							<th>Withdrawal Amount</th>
-						</tr>
-					</thead>
-					<tbody>
-						{calculateSip.transactions.map(
-							(transaction, index) => {
-								return (
-									<tr
-										className={"transaction"}
-										key={index}
-									>
-										<td>{transaction.period}</td>
-										<td>
-											{formatNumber(
-												Number(transaction.investment)
-											)}
-										</td>
-
-										<td>
-											{formatNumber(
-												Number(transaction.totalInvestment)
-											)}
-										</td>
-										<td>
-											{formatNumber(
-												Number(transaction.futureValue)
-											)}
-										</td>
-										<td>
-											{formatNumber(
-												Number(transaction.withdrawalAmount)
-											)}
-										</td>
-									</tr>
+				<Box className={"input-container"}>
+					<Box className={"input-box"}>
+						<label>
+							Transaction Number (0-{" "}
+							{calculateSip.transactions.length - 1})
+						</label>
+						<Input
+							className="input-field"
+							placeholder={`0-${calculateSip.transactions.length}`}
+							value={withdrawalForm.transactionNumber}
+							type="number"
+							onChange={(e) => {
+								handleInputChange(
+									"transactionNumber",
+									e.target.value,
+									true
 								);
-							}
-						)}
-					</tbody>
-				</table>
+							}}
+						/>
+					</Box>
+					<Box className={"input-box"}>
+						<label>
+							Withdrawal Amount{" "}
+							{(withdrawalForm.transactionNumber ||
+								withdrawalForm.transactionNumber === 0) &&
+							withdrawalForm.transactionNumber >= 0 ? (
+								<span className="max-allowed">
+									{"(Max: ₹"}{" "}
+									{formatNumber(
+										Number(
+											calculateSip.transactions[
+												withdrawalForm.transactionNumber
+											].futureValue
+										)
+									)}
+									{")"}
+								</span>
+							) : null}
+						</label>
+						<Input
+							className="input-field"
+							placeholder={"Enter HardStop"}
+							value={withdrawalForm.withdrawalAmount}
+							onChange={(e) => {
+								handleInputChange(
+									"withdrawalAmount",
+									e.target.value,
+									true
+								);
+							}}
+						/>
+					</Box>
+					<Button onClick={handleWithDrawalChange}>
+						Add Withdrawal
+					</Button>
+				</Box>
+				<DataGrid
+					className="data-grid-table"
+					rows={withdrawalTransactions.map(
+						(transaction) => ({
+							id: transaction.id,
+							transactionNumber:
+								transaction.transactionNumber,
+							withdrawalAmount: formatNumber(
+								transaction.withdrawalAmount
+							),
+						})
+					)}
+					columns={[
+						{
+							field: "transactionNumber",
+							headerName: "Period",
+							width: 100,
+						},
+						{
+							field: "withdrawalAmount",
+							headerName: "Withdrawal Amount",
+							width: 180,
+						},
+						{
+							field: "Remove",
+							headerName: "Remove",
+							width: 50,
+							renderCell: (params) => (
+								<span className="delete-icon">
+									<MdDelete
+										onClick={() => {
+											handleRemoveWithdrawal(params.row.id);
+										}}
+									/>
+								</span>
+							),
+						},
+					]}
+					pageSizeOptions={[5, 10, 20]}
+					initialState={{
+						pagination: {
+							paginationModel: { pageSize: 5 },
+						},
+					}}
+				/>
+			</Box>
+			<Box className={"transaction-container"}>
+				<DataGrid
+					className="data-grid-table"
+					rows={calculateSip.transactions.map(
+						(transaction, index) => ({
+							id: index,
+							period: transaction.period,
+							date: transaction.date,
+							investment: formatNumber(
+								Number(transaction.investment)
+							),
+							totalInvestment: formatNumber(
+								Number(transaction.totalInvestment)
+							),
+							futureValue: formatNumber(
+								Number(transaction.futureValue)
+							),
+							withdrawalAmount: formatNumber(
+								Number(transaction.withdrawalAmount)
+							),
+						})
+					)}
+					columns={[
+						{
+							field: "period",
+							headerName: "Period",
+							width: 100,
+						},
+						{
+							field: "investment",
+							headerName: "Investment",
+							width: 150,
+						},
+						{
+							field: "totalInvestment",
+							headerName: "Total Investment",
+							width: 150,
+						},
+						{
+							field: "futureValue",
+							headerName: "Future Value",
+							width: 150,
+						},
+						{
+							field: "withdrawalAmount",
+							headerName: "Withdrawal Amount",
+							width: 150,
+						},
+						{
+							field: "date",
+							headerName: "Date",
+							width: 150,
+						},
+					]}
+					rowCount={calculateSip.transactions.length}
+					pagination
+					pageSizeOptions={[
+						{ value: 12, label: "1 Year" },
+						{ value: 24, label: "2 Years" },
+						{ value: 36, label: "3 Years" },
+						{ value: 48, label: "4 Years" },
+						{ value: 60, label: "5 Years" },
+					]}
+					initialState={{
+						pagination: {
+							paginationModel: { pageSize: 12 },
+						},
+					}}
+				/>
 			</Box>
 		</Box>
 	);

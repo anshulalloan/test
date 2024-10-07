@@ -42,4 +42,34 @@
 			display: none;
 		}
 	}
+	.menu-icon {
+		display: none;
+		border: none;
+		@media screen and (max-width: 998px) {
+			display: block;
+			@include flexCol(center, center, 16px);
+			svg {
+				width: 30px;
+				height: 30px;
+				color: #1f2c37;
+			}
+		}
+	}
+}
+
+.nav-menu {
+	.menu-item {
+		@include flexRow(center, flex-start, 16px);
+		padding: 16px;
+		transition: background-color 0.3s;
+		&:hover {
+			background-color: #e5e5e5;
+		}
+		a {
+			text-decoration: none;
+			color: var(--gray900);
+			width: 100%;
+			@include flexRow(center, space-between, 16px);
+		}
+	}
 }

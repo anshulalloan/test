@@ -1,0 +1,25 @@
+.home-page {
+	width: 100%;
+	padding: 50px 10%;
+	@include flexCol(center, flex-start, 16px);
+	h1 {
+		@extend .h1-h;
+		margin-bottom: 20px;
+	}
+	.calculators {
+		@include flexCol(center, flex-start, 16px);
+		a {
+			text-decoration: none;
+			color: var(--gray900);
+			width: 100%;
+			@include flexRow(center, space-between, 16px);
+			padding: 16px;
+			border-radius: 8px;
+			background-color: #f5f5f5;
+			transition: background-color 0.3s;
+			&:hover {
+				background-color: #e5e5e5;
+			}
+		}
+	}
+}

@@ -5,28 +5,26 @@ import { useMemo } from "react";
 import { PiGraph } from "react-icons/pi";
 import { Link, useLocation } from "react-router-dom";
 
-export const Navbar = () => {
-	const routes = useMemo(() => {
-		return [
-			{
-				name: "Home",
-				path: "/",
-			},
-			{
-				name: "SIP Calculator",
-				path: "/sip-calculator",
-			},
-			{
-				name: "SWP Calculator",
-				path: "/swp-calculator",
-			},
-			{
-				name: "Retirement Calculator",
-				path: "/retirement-calculator",
-			},
-		];
-	}, []);
+export const routes = [
+	{
+		name: "Home",
+		path: "/",
+	},
+	{
+		name: "SIP Calculator",
+		path: "/sip",
+	},
+	{
+		name: "SWP Calculator",
+		path: "/swp",
+	},
+	{
+		name: "Retirement Calculator",
+		path: "/retirement",
+	},
+];
 
+export const Navbar = () => {
 	const location = useLocation();
 
 	const activeRoute = useMemo(() => {

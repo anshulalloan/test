@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
+import HomePage from "./components/home";
 import { SipCalculator } from "./components/sip/Calculator";
 
 export const AppRouter = () => {
@@ -7,10 +8,10 @@ export const AppRouter = () => {
 		<Routes>
 			<Route
 				path="/"
-				element={<SipCalculator />}
+				element={<HomePage />}
 			/>
 			<Route
-				path="/sip-calculator"
+				path="/sip"
 				element={<SipCalculator />}
 			/>
 		</Routes>

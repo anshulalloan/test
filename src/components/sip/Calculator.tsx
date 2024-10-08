@@ -8,10 +8,15 @@ import {
 	Slider,
 	Switch,
 } from "@mui/joy";
-import { Box } from "@mui/material";
+import { Box, minor } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { nanoid } from "nanoid";
-import { useCallback, useMemo, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
@@ -50,6 +55,29 @@ const installmentAmountMarks = [
 		label: "₹75k",
 	},
 ];
+
+const limits = {
+	monthlyInvestment: {
+		min: 500,
+		max: 1000000,
+	},
+	expectedReturns: {
+		min: 1,
+		max: 50,
+	},
+	investmentPeriod: {
+		min: 1,
+		max: 40,
+	},
+	increment: {
+		min: 0,
+		max: 30,
+	},
+	hardStopOnPrincipal: {
+		min: 0,
+		max: 1000000,
+	},
+};
 
 const formatNumber = (num: number) => {
 	return num.toLocaleString("en-IN", {
@@ -129,7 +157,16 @@ export const SipCalculator = () => {
 
 	const handleInputChange = useCallback(
 		(
-			key: string,
+			key:
+				| "frequency"
+				| "monthlyInvestment"
+				| "expectedReturns"
+				| "investmentPeriod"
+				| "increment"
+				| "incrementFrequency"
+				| "hardStopOnPrincipal"
+				| "transactionNumber"
+				| "withdrawalAmount",
 			value: number | string,
 			isWithdrawal?: boolean
 		) => {
@@ -152,92 +189,153 @@ export const SipCalculator = () => {
 		[]
 	);
 
-	const calculateSip = useMemo(() => {
-		const {
-			frequency,
-			monthlyInvestment,
-			expectedReturns,
-			investmentPeriod,
-			increment,
-			incrementFrequency,
-			hardStopOnPrincipal,
-		} = inputForm;
-
-		const transactions = [];
-
-		const n = periodsPerYear[frequency];
-		const r = parseFloat(expectedReturns) / 100 / n;
-		let P = parseFloat(monthlyInvestment);
-		const t = parseFloat(investmentPeriod);
-		const incrementValue = parseFloat(increment) / 100;
-		const hardStop = parseFloat(hardStopOnPrincipal);
-
-		let totalInvestment = 0;
-		let futureValue = 0;
-
-		for (let i = 0; i < t * n; i++) {
-			const newTransaction: Record<
-				string,
-				string | number
-			> = {
-				date: new Date(
-					new Date(startDate).setMonth(
-						new Date(startDate).getMonth() +
-							i * (12 / periodsPerYear[frequency])
-					)
-				)
-					.toISOString()
-					.slice(0, 7),
-				period: i,
-				investment: P,
-				futureValue,
-				totalInvestment,
-				withdrawalAmount: 0,
-			};
-			const base = Math.floor(
-				periodsPerYear[frequency] /
-					periodsPerYear[incrementFrequency]
-			);
-			if (i > 0 && i % base === 0) {
-				P += P * incrementValue;
+	const stopCal = useMemo(() => {
+		let stop = false;
+		const keys = [
+			"monthlyInvestment",
+			"expectedReturns",
+			"investmentPeriod",
+			"increment",
+			"hardStopOnPrincipal",
+		];
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			if (
+				Number((inputForm as any)[key]) <
+					(limits as any)[key].min ||
+				Number((inputForm as any)[key]) >
+					(limits as any)[key].max
+			) {
+				stop = true;
+				return stop;
 			}
-			if (hardStop > 0 && P > hardStop) {
-				P = hardStop;
-			}
-
-			const isWithdrawal = withdrawalTransactions.find(
-				(transaction) => {
-					return (
-						Number(transaction.transactionNumber) === i
-					);
-				}
-			);
-
-			newTransaction.investment = P.toFixed(2);
-			totalInvestment += P;
-
-			newTransaction.totalInvestment =
-				totalInvestment.toFixed(2);
-
-			if (isWithdrawal) {
-				futureValue -= isWithdrawal.withdrawalAmount;
-				newTransaction.withdrawalAmount =
-					isWithdrawal.withdrawalAmount;
-			}
-
-			futureValue = (futureValue + P) * (1 + r);
-
-			newTransaction.futureValue = futureValue.toFixed(2);
-			transactions.push(newTransaction);
 		}
+		return stop;
+	}, [inputForm]);
 
-		return {
-			totalInvestment: totalInvestment.toFixed(2),
-			futureValue: futureValue.toFixed(2),
-			returns: (futureValue - totalInvestment).toFixed(2),
-			transactions,
-		};
-	}, [inputForm, startDate, withdrawalTransactions]);
+	const [calculateSip, setCalculateSip] = useState<{
+		totalInvestment: string;
+		futureValue: string;
+		returns: string;
+		transactions: Array<Record<string, string | number>>;
+	}>({
+		totalInvestment: "0",
+		futureValue: "0",
+		returns: "0",
+		transactions: [],
+	});
+
+	const calculateSipFunction = useCallback(
+		(
+			inputForm: any,
+			startDate: any,
+			withdrawalTransactions: any
+		) => {
+			const {
+				frequency,
+				monthlyInvestment,
+				expectedReturns,
+				investmentPeriod,
+				increment,
+				incrementFrequency,
+				hardStopOnPrincipal,
+			} = inputForm;
+
+			const transactions = [];
+
+			const n = periodsPerYear[frequency];
+			const r = parseFloat(expectedReturns) / 100 / n;
+			let P = parseFloat(monthlyInvestment);
+			const t = parseFloat(investmentPeriod);
+			const incrementValue = parseFloat(increment) / 100;
+			const hardStop = parseFloat(hardStopOnPrincipal);
+
+			let totalInvestment = 0;
+			let futureValue = 0;
+
+			for (let i = 0; i < t * n; i++) {
+				const newTransaction: Record<
+					string,
+					string | number
+				> = {
+					date: new Date(
+						new Date(startDate).setMonth(
+							new Date(startDate).getMonth() +
+								i * (12 / periodsPerYear[frequency])
+						)
+					)
+						.toISOString()
+						.slice(0, 7),
+					period: i,
+					investment: P,
+					futureValue,
+					totalInvestment,
+					withdrawalAmount: 0,
+				};
+				const base = Math.floor(
+					periodsPerYear[frequency] /
+						periodsPerYear[incrementFrequency]
+				);
+				if (i > 0 && i % base === 0) {
+					P += P * incrementValue;
+				}
+				if (hardStop > 0 && P > hardStop) {
+					P = hardStop;
+				}
+
+				const isWithdrawal = withdrawalTransactions.find(
+					(transaction: any) => {
+						return (
+							Number(transaction.transactionNumber) === i
+						);
+					}
+				);
+
+				newTransaction.investment = P.toFixed(2);
+				totalInvestment += P;
+
+				newTransaction.totalInvestment =
+					totalInvestment.toFixed(2);
+
+				if (isWithdrawal) {
+					futureValue -= isWithdrawal.withdrawalAmount;
+					newTransaction.withdrawalAmount =
+						isWithdrawal.withdrawalAmount;
+				}
+
+				futureValue = (futureValue + P) * (1 + r);
+
+				newTransaction.futureValue = futureValue.toFixed(2);
+				transactions.push(newTransaction);
+			}
+
+			return {
+				totalInvestment: totalInvestment.toFixed(2),
+				futureValue: futureValue.toFixed(2),
+				returns: (futureValue - totalInvestment).toFixed(2),
+				transactions,
+			};
+		},
+		[]
+	);
+
+	useEffect(() => {
+		if (stopCal) {
+			return;
+		}
+		const result = calculateSipFunction(
+			inputForm,
+			startDate,
+			withdrawalTransactions
+		);
+		setCalculateSip(result);
+	}, [
+		calculateSipFunction,
+		inputForm,
+		startDate,
+		stopCal,
+		withdrawalTransactions,
+	]);
 
 	return (
 		<Box className={"sip-calculator"}>
@@ -625,6 +723,8 @@ export const SipCalculator = () => {
 							Withdrawal Amount{" "}
 							{(withdrawalForm.transactionNumber ||
 								withdrawalForm.transactionNumber === 0) &&
+							calculateSip.transactions.length >
+								withdrawalForm.transactionNumber &&
 							withdrawalForm.transactionNumber >= 0 ? (
 								<span className="max-allowed">
 									{"(Max: ₹"}{" "}
